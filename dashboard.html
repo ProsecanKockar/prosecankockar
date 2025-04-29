@@ -88,27 +88,54 @@
 </div>
 
 <script type="module">
- import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
- import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
- const firebaseConfig = {
- apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
- authDomain: "prosecankockar-a1c15.firebaseapp.com",
- projectId: "prosecankockar-a1c15",
- storageBucket: "prosecankockar-a1c15.appspot.com",
- messagingSenderId: "968186282419",
- appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
- };
+const firebaseConfig = {
+apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
+authDomain: "prosecankockar-a1c15.firebaseapp.com",
+projectId: "prosecankockar-a1c15",
+storageBucket: "prosecankockar-a1c15.appspot.com",
+messagingSenderId: "968186282419",
+appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
+};
 
- const app = initializeApp(firebaseConfig);
- const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
- window.logout = function () {
- signOut(auth).then(() => {
- window.location.href = "index.html";
- });
- };
+// Odjava korisnika
+window.logout = function () {
+signOut(auth).then(() => {
+window.location.href = "index.html";
+});
+};
+
+// Učitavanje tipova iz Firestore
+async function loadTips() {
+const querySnapshot = await getDocs(collection(db, "tipovi"));
+const container = document.querySelector(".container");
+
+querySnapshot.forEach((doc) => {
+const data = doc.data();
+const box = document.createElement("div");
+box.className = "tip-box";
+
+box.innerHTML = `
+<strong>${data.sport}:</strong> ${data.meč}<br>
+<strong>Tip:</strong> ${data.tip}<br>
+<strong>Kvota:</strong> ${data.kvota}
+${data.premium ? "<br><em>Premium tip</em>" : ""}
+`;
+
+if (data.premium) {
+box.style.border = "1px solid gold";
+}
+
+container.appendChild(box);
+});
+}
+
+loadTips();
 </script>
-
-</body>
-</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<title>Registracija - Prosečan Kockar</title>
+<style>
+body {
+background-color: #121212;
+color: #fff;
+font-family: 'Segoe UI', sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+height: 100vh;
+margin: 0;
+}
+h1 {
+color: #f44336;
+}
+input {
+padding: 10px;
+margin: 8px;
+border: none;
+border-radius: 5px;
+width: 250px;
+}
+button {
+padding: 10px 20px;
+background-color: #f44336;
+color: white;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+margin-top: 10px;
+}
+.box {
+background-color: #1f1f1f;
+padding: 30px;
+border-radius: 10px;
+box-shadow: 0 0 10px #000;
+text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h1>Registracija</h1>
+<input type="email" id="email" placeholder="Email" required /><br />
+<input type="password" id="password" placeholder="Lozinka" required /><br />
+<button onclick="register()">Kreiraj nalog</button>
+<p style="margin-top: 15px;">
+Imaš nalog? <a href="index.html" style="color:#f44336;">Prijavi se</a>
+</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
+authDomain: "prosecankockar-a1c15.firebaseapp.com",
+projectId: "prosecankockar-a1c15",
+storageBucket: "prosecankockar-a1c15.appspot.com",
+messagingSenderId: "968186282419",
+appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.register = function () {
+const email = document.getElementById("email").value;
+const password = document.getElementById("password").value;
+
+createUserWithEmailAndPassword(auth, email, password)
+.then((userCredential) => {
+alert("Uspešno registrovan!");
+window.location.href = "dashboard.html";
+})
+.catch((error) => {
+alert("Greška: " + error.message);
+});
+};
+</script>
+
+</body>
+</html>

@@ -110,9 +110,13 @@ window.login = function () {
 const email = document.getElementById("loginEmail").value;
 const password = document.getElementById("loginPassword").value;
 signInWithEmailAndPassword(auth, email, password)
-.then(() => alert("Uspešna prijava!"))
-.catch(error => alert("Greška: " + error.message));
-};
+.then((userCredential) => {
+// alert("Uspešna prijava!"); // možeš i ukloniti alert ako ne želiš iskačuću poruku
+window.location.href = "dashboard.html";
+})
+.catch((error) => {
+alert("Greška pri prijavi: " + error.message);
+});
 </script>
 </body>
 </html>

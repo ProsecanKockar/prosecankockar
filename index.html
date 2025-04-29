@@ -1,43 +1,118 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Prosečan Kockar</title>
 <style>
-body { font-family: Arial; background: #f5f5f5; color: #333; }
-header, footer { background: #111; color: #fff; padding: 10px; text-align: center; }
-nav a { margin: 0 15px; color: #fff; text-decoration: none; }
-section { padding: 20px; }
+body {
+background-color: #121212;
+color: #fff;
+font-family: 'Segoe UI', sans-serif;
+margin: 0;
+padding: 0;
+}
+header, footer {
+background-color: #1a1a1a;
+text-align: center;
+padding: 20px;
+}
+nav a {
+margin: 0 15px;
+color: #f44336;
+text-decoration: none;
+font-weight: bold;
+}
+.container {
+max-width: 400px;
+margin: 40px auto;
+padding: 20px;
+background-color: #1f1f1f;
+border-radius: 10px;
+}
+input {
+width: 100%;
+padding: 10px;
+margin-top: 10px;
+margin-bottom: 20px;
+border: none;
+border-radius: 5px;
+}
+button {
+width: 100%;
+padding: 10px;
+background-color: #f44336;
+color: white;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+}
+h2 {
+border-bottom: 1px solid #333;
+padding-bottom: 10px;
+}
 </style>
 </head>
 <body>
+
 <header>
 <h1>Prosečan Kockar</h1>
 <nav>
-<a href="#takmicenje">Takmičenje</a>
-<a href="#tipovi">Tipovi</a>
-<a href="#login">Login</a>
+<a href="#">Početna</a>
+<a href="#">Tipovi</a>
+<a href="#">Takmičenje</a>
 </nav>
 </header>
 
-<section id="takmicenje">
-<h2>Kralj Meseca - Takmičenje</h2>
-<p>Priključi se i pokaži svoje znanje. Svaki član startuje sa 1.000€. Najbolji dobijaju nagrade!</p>
-<div id="leaderboard">Rang lista će biti ovde...</div>
-</section>
+<div class="container">
+<h2>Registracija</h2>
+<input type="email" id="registerEmail" placeholder="Email" />
+<input type="password" id="registerPassword" placeholder="Lozinka" />
+<button onclick="register()">Registruj se</button>
 
-<section id="tipovi">
-<h2>Tipovi</h2>
-<h3>Besplatni tipovi</h3>
-<ul>
-<li>Partizan - Zvezda (kvota 1.80) - tip: 1</li>
-</ul>
-<h3>Premium tipovi</h3>
-<p>Prijavi se da vidiš premium sadržaj.</p>
-</section>
+<h2>Login</h2>
+<input type="email" id="loginEmail" placeholder="Email" />
+<input type="password" id="loginPassword" placeholder="Lozinka" />
+<button onclick="login()">Uloguj se</button>
+</div>
 
 <footer>
 &copy; 2025 Prosečan Kockar
 </footer>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
+authDomain: "prosecankockar-a1c15.firebaseapp.com",
+projectId: "prosecankockar-a1c15",
+storageBucket: "prosecankockar-a1c15.appspot.com",
+messagingSenderId: "968186282419",
+appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// Registracija
+window.register = function () {
+const email = document.getElementById("registerEmail").value;
+const password = document.getElementById("registerPassword").value;
+createUserWithEmailAndPassword(auth, email, password)
+.then(() => alert("Uspešna registracija!"))
+.catch(error => alert("Greška: " + error.message));
+};
+
+// Login
+window.login = function () {
+const email = document.getElementById("loginEmail").value;
+const password = document.getElementById("loginPassword").value;
+signInWithEmailAndPassword(auth, email, password)
+.then(() => alert("Uspešna prijava!"))
+.catch(error => alert("Greška: " + error.message));
+};
+</script>
 </body>
 </html>

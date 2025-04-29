@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+ <meta charset="UTF-8" />
+ <title>Dashboard | Prosečan Kockar</title>
+ <style>
+ body {
+ background-color: #121212;
+ color: #fff;
+ font-family: 'Segoe UI', sans-serif;
+ margin: 0;
+ padding: 0;
+ }
+ header {
+ background-color: #1a1a1a;
+ padding: 20px;
+ text-align: center;
+ }
+ nav a {
+ color: #f44336;
+ margin: 0 15px;
+ text-decoration: none;
+ font-weight: bold;
+ }
+ .container {
+ padding: 20px;
+ max-width: 900px;
+ margin: auto;
+ }
+ h2 {
+ border-bottom: 1px solid #444;
+ padding-bottom: 5px;
+ margin-top: 30px;
+ }
+ .tip-box {
+ background-color: #1f1f1f;
+ padding: 15px;
+ border-radius: 10px;
+ margin-bottom: 15px;
+ }
+ .logout-btn {
+ background: #f44336;
+ color: #fff;
+ padding: 8px 15px;
+ border: none;
+ border-radius: 5px;
+ cursor: pointer;
+ float: right;
+ margin-top: -30px;
+ }
+ </style>
+</head>
+<body>
+
+<header>
+ <h1>Prosečan Kockar</h1>
+ <nav>
+ <a href="#">Tipovi</a>
+ <a href="#">Takmičenje</a>
+ <a href="#">Profil</a>
+ <button class="logout-btn" onclick="logout()">Odjava</button>
+ </nav>
+</header>
+
+<div class="container">
+ <h2>Besplatni Tipovi</h2>
+ <div class="tip-box">
+ <strong>Fudbal:</strong> Arsenal - Chelsea 
+ <br><strong>Tip:</strong> 1 
+ <br><strong>Kvota:</strong> 2.10
+ </div>
+ <div class="tip-box">
+ <strong>Košarka:</strong> Zvezda - Partizan 
+ <br><strong>Tip:</strong> +10.5 Zvezda 
+ <br><strong>Kvota:</strong> 1.85
+ </div>
+
+ <h2>Premium Tipovi</h2>
+ <p>Samo za pretplaćene članove.</p>
+
+ <h2>Takmičenje</h2>
+ <p>Trenutni poredak (uskoro povezano sa bazom):</p>
+ <div class="tip-box">
+ 1. @Marko - 1200 RSD 
+ <br>2. @Ivan - 1000 RSD 
+ <br>3. @Petar - 750 RSD
+ </div>
+</div>
+
+<script type="module">
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+ import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+ const firebaseConfig = {
+ apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
+ authDomain: "prosecankockar-a1c15.firebaseapp.com",
+ projectId: "prosecankockar-a1c15",
+ storageBucket: "prosecankockar-a1c15.appspot.com",
+ messagingSenderId: "968186282419",
+ appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
+ };
+
+ const app = initializeApp(firebaseConfig);
+ const auth = getAuth(app);
+
+ window.logout = function () {
+ signOut(auth).then(() => {
+ window.location.href = "index.html";
+ });
+ };
+</script>
+
+</body>
+</html>

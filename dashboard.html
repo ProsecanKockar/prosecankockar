@@ -168,6 +168,28 @@ document.getElementById("userSaldo").innerText = `Tvoj saldo: ${data.balance} RS
 async function loadMatches() {
 const container = document.getElementById("mecevi");
 const snapshot = await db.collection("matches").get();
+container.innerHTML = "";
+
+snapshot.forEach(doc => {
+const data = doc.data();
+const div = document.createElement("div");
+div.className = "match";
+
+div.innerHTML = `
+<strong>${data.teams}</strong><br/>
+<label for="prediction-${doc.id}">Izaberi pobednika:</label>
+<select id="prediction-${doc.id}">
+<option value="${data.team1}">${data.team1}</option>
+<option value="${data.team2}">${data.team2}</option>
+</select><br/>
+<label for="stake-${doc.id}">Ulog:</label>
+<input type="number" id="stake-${doc.id}" placeholder="Unesi ulog" min="1" /><br/>
+<button onclick="placeBet('${doc.id}', '${data.teams}')">Postavi opkladu</button>
+`;
+
+container.appendChild(div);
+});
+}
 
 snapshot.forEach(doc => {
 const data = doc.data();

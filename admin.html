@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin Panel - Prosečan Kockar</title>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <style>
 body {
@@ -13,76 +12,46 @@ background-color: #121212;
 color: #f1f1f1;
 font-family: 'Segoe UI', sans-serif;
 padding: 20px;
-display: flex;
-flex-direction: column;
-align-items: center;
 }
 
-h1, h2 {
+h1 {
 color: #00ffcc;
-text-align: center;
 }
 
-table {
-width: 100%;
-max-width: 800px;
-border-collapse: collapse;
-margin-top: 20px;
+.match {
 background-color: #1e1e1e;
+padding: 15px;
+margin-bottom: 10px;
 border-radius: 8px;
-overflow: hidden;
-box-shadow: 0 0 10px #00ffcc33;
+box-shadow: 0 0 5px #00ffcc33;
 }
 
-th, td {
-padding: 12px;
-border-bottom: 1px solid #333;
-text-align: center;
-}
-
-th {
-background-color: #222;
-color: #00ffcc;
-}
-
-tr:last-child td {
-border-bottom: none;
-}
-
-.action-button {
-padding: 8px 16px;
+select, button {
+padding: 6px;
+margin-top: 5px;
 background-color: #00ffcc;
-color: #000;
+color: black;
+font-weight: bold;
 border: none;
 border-radius: 4px;
 cursor: pointer;
-font-weight: bold;
-transition: background 0.3s;
 }
 
-.action-button:hover {
-background-color: #00ccaa;
+select {
+background-color: #2c2c2c;
+color: white;
+}
+
+.success {
+color: #00ffcc;
+margin-top: 10px;
 }
 </style>
 </head>
 <body>
-<h1>Admin Panel - Prosečan Kockar</h1>
-
-<!-- Prikaz aktivnih opklada -->
-<h2>Aktivne Opklade</h2>
-<table>
-<thead>
-<tr>
-<th>Meč</th>
-<th>Tip</th>
-<th>Ulog</th>
-<th>Status</th>
-<th>Datum</th>
-<th>Reši Opkladu</th>
-</tr>
-</thead>
-<tbody id="bets-body"></tbody>
-</table>
+<h1>Admin Panel</h1>
+<div id="matchList">Učitavanje mečeva...</div>
+<div id="adminMsg"></div>
 
 <script>
 const firebaseConfig = {
@@ -94,81 +63,74 @@ messagingSenderId: "968186282419",
 appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
 };
 
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const auth = firebase.auth();
 
-// Funkcija za učitavanje aktivnih opklada
-async function loadActiveBets() {
-const betsRef = db.collection("bets").where("result", "==", null);
-const snapshot = await betsRef.get();
-const tbody = document.getElementById("bets-body");
-tbody.innerHTML = "";
+async function loadMatches() {
+const container = document.getElementById("matchList");
+container.innerHTML = "";
 
+const snapshot = await db.collection("matches").get();
 snapshot.forEach(doc => {
-const bet = doc.data();
-const tr = document.createElement("tr");
-const date = bet.createdAt?.toDate().toLocaleString("sr-RS") || "Nepoznato";
+const data = doc.data();
 
-tr.innerHTML = `
-<td>${bet.match}</td>
-<td>${bet.prediction}</td>
-<td>${bet.stake}</td>
-<td>Aktivna</td>
-<td>${date}</td>
-<td>
-<button class="action-button" onclick="resolveBet('${doc.id}', 'win')">Pobeda</button>
-<button class="action-button" onclick="resolveBet('${doc.id}', 'lose')">Poraz</button>
-</td>
+const div = document.createElement("div");
+div.className = "match";
+
+div.innerHTML = `
+<strong>${data.teams}</strong><br/>
+<label>Postavi rezultat:</label>
+<select id="result-${doc.id}">
+<option value="">Izaberi pobednika</option>
+<option value="${data.team1}">${data.team1}</option>
+<option value="${data.team2}">${data.team2}</option>
+</select>
+<button onclick="submitResult('${doc.id}', '${data.team1}', '${data.team2}')">Potvrdi</button>
 `;
-tbody.appendChild(tr);
+
+container.appendChild(div);
 });
 }
 
-// Funkcija za rešavanje opklade
-async function resolveBet(betId, result) {
-const betRef = db.collection("bets").doc(betId);
-const betDoc = await betRef.get();
+async function submitResult(matchId, team1, team2) {
+const selectedResult = document.getElementById(`result-${matchId}`).value;
+const msg = document.getElementById("adminMsg");
+
+if (!selectedResult) {
+msg.innerHTML = `<div class='error'>Morate izabrati rezultat.</div>`;
+return;
+}
+
+// Ažuriraj rezultat meča
+await db.collection("matches").doc(matchId).update({
+result: selectedResult
+});
+
+// Pronađi sve opklade na ovaj meč
+const betsSnapshot = await db.collection("bets").where("match", "==", `${team1} vs ${team2}`).get();
+const batch = db.batch();
+
+betsSnapshot.forEach(betDoc => {
 const betData = betDoc.data();
+const betRef = db.collection("bets").doc(betDoc.id);
 
-// Ažuriranje rezultata opklade
-await betRef.update({
-result: result
-});
+// Ažuriraj rezultat opklade
+batch.update(betRef, { result: selectedResult });
 
-// Ažuriranje balansa korisnika
+// Ako je pogodio, vrati mu duplo
+if (betData.prediction === selectedResult) {
 const userRef = db.collection("users").doc(betData.userId);
-const userDoc = await userRef.get();
-const userData = userDoc.data();
-
-let balanceChange = 0;
-if (result === "win") {
-// Dobitak je ulog * 2 (ako je pogodio)
-balanceChange = betData.stake * 2;
-} else {
-// Ako je izgubio, samo oduzimamo ulog
-balanceChange = -betData.stake;
+batch.update(userRef, {
+balance: firebase.firestore.FieldValue.increment(betData.stake * 2)
+});
 }
-
-// Ažuriranje korisničkog balansa
-await userRef.update({
-balance: firebase.firestore.FieldValue.increment(balanceChange)
 });
 
-// Prikazivanje poruke
-alert(`Opklada rešena! Rezultat: ${result === "win" ? "Pobeda" : "Poraz"}`);
-loadActiveBets(); // Ponovno učitavanje liste opklada
+await batch.commit();
+msg.innerHTML = `<div class='success'>Rezultat unet i opklade obrađene!</div>`;
 }
 
-// Provera da li je admin prijavljen
-auth.onAuthStateChanged(user => {
-if (user && user.email === "markomjr96@gmail.com") {
-loadActiveBets(); // Učitaj aktivne opklade samo ako je admin prijavljen
-} else {
-window.location.href = "login.html"; // Ako nije admin, prebaci ga na login stranicu
-}
-});
+loadMatches();
 </script>
 </body>
 </html>

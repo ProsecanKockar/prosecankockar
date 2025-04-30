@@ -3,55 +3,57 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Admin Panel - Prosečan Kockar</title>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<title>Admin Panel - Dodavanje Mečeva</title>
 <style>
 body {
 background-color: #121212;
-color: #f1f1f1;
-font-family: 'Segoe UI', sans-serif;
+color: white;
+font-family: Arial, sans-serif;
 padding: 20px;
+text-align: center;
 }
 
-h1 {
-color: #00ffcc;
+input, button {
+padding: 10px;
+margin: 10px auto;
+width: 90%;
+max-width: 400px;
+display: block;
+font-size: 16px;
+border-radius: 5px;
+border: none;
 }
 
-.match {
-background-color: #1e1e1e;
-padding: 15px;
-margin-bottom: 10px;
-border-radius: 8px;
-box-shadow: 0 0 5px #00ffcc33;
-}
-
-select, button {
-padding: 6px;
-margin-top: 5px;
+button {
 background-color: #00ffcc;
 color: black;
 font-weight: bold;
-border: none;
-border-radius: 4px;
 cursor: pointer;
 }
 
-select {
-background-color: #2c2c2c;
-color: white;
+button:hover {
+background-color: #00ccaa;
 }
 
-.success {
+.message {
+margin-top: 15px;
 color: #00ffcc;
-margin-top: 10px;
 }
 </style>
 </head>
 <body>
 <h1>Admin Panel</h1>
-<div id="matchList">Učitavanje mečeva...</div>
-<div id="adminMsg"></div>
+<h2>Dodaj Novi Meč</h2>
+
+<input type="text" id="team1" placeholder="Tim 1 (npr. Crvena Zvezda)" />
+<input type="text" id="team2" placeholder="Tim 2 (npr. Partizan)" />
+<button onclick="addMatch()">Dodaj Meč</button>
+
+<div class="message" id="message"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -66,71 +68,28 @@ appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-async function loadMatches() {
-const container = document.getElementById("matchList");
-container.innerHTML = "";
+async function addMatch() {
+const team1 = document.getElementById("team1").value.trim();
+const team2 = document.getElementById("team2").value.trim();
+const message = document.getElementById("message");
 
-const snapshot = await db.collection("matches").get();
-snapshot.forEach(doc => {
-const data = doc.data();
-
-const div = document.createElement("div");
-div.className = "match";
-
-div.innerHTML = `
-<strong>${data.teams}</strong><br/>
-<label>Postavi rezultat:</label>
-<select id="result-${doc.id}">
-<option value="">Izaberi pobednika</option>
-<option value="${data.team1}">${data.team1}</option>
-<option value="${data.team2}">${data.team2}</option>
-</select>
-<button onclick="submitResult('${doc.id}', '${data.team1}', '${data.team2}')">Potvrdi</button>
-`;
-
-container.appendChild(div);
-});
-}
-
-async function submitResult(matchId, team1, team2) {
-const selectedResult = document.getElementById(`result-${matchId}`).value;
-const msg = document.getElementById("adminMsg");
-
-if (!selectedResult) {
-msg.innerHTML = `<div class='error'>Morate izabrati rezultat.</div>`;
+if (!team1 || !team2) {
+message.textContent = "Popuni oba tima!";
 return;
 }
 
-// Ažuriraj rezultat meča
-await db.collection("matches").doc(matchId).update({
-result: selectedResult
+const teams = `${team1} - ${team2}`;
+
+await db.collection("matches").add({
+team1,
+team2,
+teams
 });
 
-// Pronađi sve opklade na ovaj meč
-const betsSnapshot = await db.collection("bets").where("match", "==", `${team1} vs ${team2}`).get();
-const batch = db.batch();
-
-betsSnapshot.forEach(betDoc => {
-const betData = betDoc.data();
-const betRef = db.collection("bets").doc(betDoc.id);
-
-// Ažuriraj rezultat opklade
-batch.update(betRef, { result: selectedResult });
-
-// Ako je pogodio, vrati mu duplo
-if (betData.prediction === selectedResult) {
-const userRef = db.collection("users").doc(betData.userId);
-batch.update(userRef, {
-balance: firebase.firestore.FieldValue.increment(betData.stake * 2)
-});
+message.textContent = `Uspešno dodat meč: ${teams}`;
+document.getElementById("team1").value = "";
+document.getElementById("team2").value = "";
 }
-});
-
-await batch.commit();
-msg.innerHTML = `<div class='success'>Rezultat unet i opklade obrađene!</div>`;
-}
-
-loadMatches();
 </script>
 </body>
 </html>

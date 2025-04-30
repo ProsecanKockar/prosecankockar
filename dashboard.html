@@ -13,30 +13,46 @@ background-color: #121212;
 color: #f1f1f1;
 font-family: 'Segoe UI', sans-serif;
 margin: 0;
+padding: 0;
+display: flex;
+justify-content: center;
+}
+
+.container {
+max-width: 800px;
+width: 100%;
 padding: 20px;
 }
 
 h1, h2 {
 color: #00ffcc;
+text-align: center;
 }
 
 .saldo {
 margin-bottom: 20px;
 font-size: 18px;
+text-align: center;
 }
 
-.match, .bet {
+.section {
 background-color: #1e1e1e;
-padding: 15px;
-margin-bottom: 10px;
+padding: 20px;
+margin-bottom: 20px;
 border-radius: 8px;
-box-shadow: 0 0 5px #00ffcc33;
+box-shadow: 0 0 10px #00ffcc33;
+}
+
+.match {
+margin-bottom: 15px;
+padding-bottom: 10px;
+border-bottom: 1px solid #333;
 }
 
 select, input[type="number"] {
 padding: 6px;
 border-radius: 4px;
-margin-right: 10px;
+margin: 5px 5px 5px 0;
 background-color: #2c2c2c;
 color: white;
 border: none;
@@ -57,40 +73,48 @@ button:hover {
 background-color: #00ccaa;
 }
 
-.bets, .past-bets, .ranking {
-margin-top: 30px;
+.bet {
+margin-bottom: 10px;
 }
 
 .success {
 color: #00ffcc;
 margin-top: 10px;
+text-align: center;
 }
 
 .error {
 color: red;
 margin-top: 10px;
+text-align: center;
 }
 </style>
 </head>
 <body>
+<div class="container">
 <h1>Dobrodošao na Prosečan Kockar</h1>
 <div class="saldo" id="userSaldo">Učitavanje salda...</div>
-<div id="mecevi"></div>
+
+<div class="section" id="mecevi">
+<h2>Dostupni mečevi</h2>
+</div>
+
 <div id="message"></div>
 
-<div class="bets">
+<div class="section bets">
 <h2>Aktivne opklade</h2>
 <div id="aktivneOpklade"></div>
 </div>
 
-<div class="past-bets">
+<div class="section past-bets">
 <h2>Prošle opklade</h2>
 <div id="prosleOpklade"></div>
 </div>
 
-<div class="ranking">
+<div class="section ranking">
 <h2>Rang lista</h2>
 <div id="rankingList"></div>
+</div>
 </div>
 
 <script>
@@ -144,7 +168,6 @@ document.getElementById("userSaldo").innerText = `Tvoj saldo: ${data.balance} RS
 async function loadMatches() {
 const container = document.getElementById("mecevi");
 const snapshot = await db.collection("matches").get();
-container.innerHTML = "<h2>Dostupni mečevi</h2>";
 
 snapshot.forEach(doc => {
 const data = doc.data();
@@ -158,8 +181,8 @@ div.innerHTML = `
 <option value="${data.team1}">${data.team1}</option>
 <option value="${data.team2}">${data.team2}</option>
 </select>
-<input type="number" id="stake-${doc.id}" placeholder="Ulog" min="1" />
-<button onclick="placeBet('${doc.id}', '${data.teams}')">Kladjenje</button>
+<input type="number" id="stake-${doc.id}" placeholder="Ulog (RSD)" min="1" />
+<button onclick="placeBet('${doc.id}', '${data.teams}')">Postavi opkladu</button>
 `;
 
 container.appendChild(div);
@@ -199,7 +222,7 @@ await userRef.update({
 balance: firebase.firestore.FieldValue.increment(-stake)
 });
 
-msg.innerHTML = `<div class='success'>Opklada postavljena!</div>`;
+msg.innerHTML = `<div class='success'>Opklada uspešno postavljena!</div>`;
 loadUserSaldo();
 loadUserBets();
 }
@@ -232,6 +255,8 @@ pastContainer.appendChild(div);
 
 async function loadRanking() {
 const container = document.getElementById("rankingList");
+container.innerHTML = "";
+
 const snapshot = await db.collection("users").orderBy("balance", "desc").limit(10).get();
 
 let rank = 1;

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Panel - Prosečan Kockar</title>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<style>
+body {
+background-color: #121212;
+color: #f1f1f1;
+font-family: 'Segoe UI', sans-serif;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+h1, h2 {
+color: #00ffcc;
+text-align: center;
+}
+
+table {
+width: 100%;
+max-width: 800px;
+border-collapse: collapse;
+margin-top: 20px;
+background-color: #1e1e1e;
+border-radius: 8px;
+overflow: hidden;
+box-shadow: 0 0 10px #00ffcc33;
+}
+
+th, td {
+padding: 12px;
+border-bottom: 1px solid #333;
+text-align: center;
+}
+
+th {
+background-color: #222;
+color: #00ffcc;
+}
+
+tr:last-child td {
+border-bottom: none;
+}
+
+.action-button {
+padding: 8px 16px;
+background-color: #00ffcc;
+color: #000;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-weight: bold;
+transition: background 0.3s;
+}
+
+.action-button:hover {
+background-color: #00ccaa;
+}
+</style>
+</head>
+<body>
+<h1>Admin Panel - Prosečan Kockar</h1>
+
+<!-- Prikaz aktivnih opklada -->
+<h2>Aktivne Opklade</h2>
+<table>
+<thead>
+<tr>
+<th>Meč</th>
+<th>Tip</th>
+<th>Ulog</th>
+<th>Status</th>
+<th>Datum</th>
+<th>Reši Opkladu</th>
+</tr>
+</thead>
+<tbody id="bets-body"></tbody>
+</table>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
+authDomain: "prosecankockar-a1c15.firebaseapp.com",
+projectId: "prosecankockar-a1c15",
+storageBucket: "prosecankockar-a1c15.appspot.com",
+messagingSenderId: "968186282419",
+appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
+};
+
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Funkcija za učitavanje aktivnih opklada
+async function loadActiveBets() {
+const betsRef = db.collection("bets").where("result", "==", null);
+const snapshot = await betsRef.get();
+const tbody = document.getElementById("bets-body");
+tbody.innerHTML = "";
+
+snapshot.forEach(doc => {
+const bet = doc.data();
+const tr = document.createElement("tr");
+const date = bet.createdAt?.toDate().toLocaleString("sr-RS") || "Nepoznato";
+
+tr.innerHTML = `
+<td>${bet.match}</td>
+<td>${bet.prediction}</td>
+<td>${bet.stake}</td>
+<td>Aktivna</td>
+<td>${date}</td>
+<td>
+<button class="action-button" onclick="resolveBet('${doc.id}', 'win')">Pobeda</button>
+<button class="action-button" onclick="resolveBet('${doc.id}', 'lose')">Poraz</button>
+</td>
+`;
+tbody.appendChild(tr);
+});
+}
+
+// Funkcija za rešavanje opklade
+async function resolveBet(betId, result) {
+const betRef = db.collection("bets").doc(betId);
+const betDoc = await betRef.get();
+const betData = betDoc.data();
+
+// Ažuriranje rezultata opklade
+await betRef.update({
+result: result
+});
+
+// Ažuriranje balansa korisnika
+const userRef = db.collection("users").doc(betData.userId);
+const userDoc = await userRef.get();
+const userData = userDoc.data();
+
+let balanceChange = 0;
+if (result === "win") {
+// Dobitak je ulog * 2 (ako je pogodio)
+balanceChange = betData.stake * 2;
+} else {
+// Ako je izgubio, samo oduzimamo ulog
+balanceChange = -betData.stake;
+}
+
+// Ažuriranje korisničkog balansa
+await userRef.update({
+balance: firebase.firestore.FieldValue.increment(balanceChange)
+});
+
+// Prikazivanje poruke
+alert(`Opklada rešena! Rezultat: ${result === "win" ? "Pobeda" : "Poraz"}`);
+loadActiveBets(); // Ponovno učitavanje liste opklada
+}
+
+// Provera da li je admin prijavljen
+auth.onAuthStateChanged(user => {
+if (user && user.email === "markomjr96@gmail.com") {
+loadActiveBets(); // Učitaj aktivne opklade samo ako je admin prijavljen
+} else {
+window.location.href = "login.html"; // Ako nije admin, prebaci ga na login stranicu
+}
+});
+</script>
+</body>
+</html>

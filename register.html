@@ -1,110 +1,133 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Registracija - Prosečan Kockar</title>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<style>
-body {
-background-color: #121212;
-color: #f1f1f1;
-font-family: 'Segoe UI', sans-serif;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-height: 100vh;
-margin: 0;
-}
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ <title>Registracija - Prosečan Kockar</title>
+ <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+ <style>
+ body {
+ background-color: #121212;
+ color: #f1f1f1;
+ font-family: 'Segoe UI', sans-serif;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ height: 100vh;
+ margin: 0;
+ }
 
-h1 {
-color: #00ffcc;
-margin-bottom: 30px;
-}
+ .form-container {
+ background-color: #1e1e1e;
+ padding: 40px;
+ border-radius: 8px;
+ box-shadow: 0 0 15px #00ffcc33;
+ text-align: center;
+ }
 
-input {
-padding: 12px;
-margin: 10px 0;
-width: 250px;
-border: none;
-border-radius: 4px;
-background-color: #1e1e1e;
-color: #fff;
-font-size: 16px;
-}
+ h1 {
+ color: #00ffcc;
+ margin-bottom: 30px;
+ }
 
-button {
-padding: 12px 20px;
-margin-top: 20px;
-background-color: #00ffcc;
-color: #000;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-weight: bold;
-font-size: 16px;
-transition: background 0.3s;
-}
+ input {
+ padding: 12px;
+ margin: 10px 0;
+ width: 250px;
+ border: none;
+ border-radius: 4px;
+ background-color: #2c2c2c;
+ color: #fff;
+ font-size: 16px;
+ }
 
-button:hover {
-background-color: #00ccaa;
-}
+ button {
+ padding: 12px 20px;
+ margin-top: 20px;
+ background-color: #00ffcc;
+ color: #000;
+ border: none;
+ border-radius: 4px;
+ cursor: pointer;
+ font-weight: bold;
+ font-size: 16px;
+ transition: background 0.3s;
+ }
 
-.form-container {
-background-color: #1e1e1e;
-padding: 40px;
-border-radius: 8px;
-box-shadow: 0 0 15px #00ffcc33;
-text-align: center;
-}
-</style>
+ button:hover {
+ background-color: #00ccaa;
+ }
+
+ .error {
+ color: red;
+ margin-top: 10px;
+ }
+
+ .success {
+ color: #00ffcc;
+ margin-top: 10px;
+ }
+ </style>
 </head>
 <body>
-<div class="form-container">
-<h1>Kreiraj nalog</h1>
-<input type="email" id="email" placeholder="Email" required /><br/>
-<input type="password" id="password" placeholder="Lozinka" required /><br/>
-<button onclick="registerUser()">Registruj se</button>
-</div>
+ <div class="form-container">
+ <h1>Kreiraj nalog</h1>
+ <input type="email" id="email" placeholder="Email" required /><br/>
+ <input type="password" id="password" placeholder="Lozinka (min. 6 karaktera)" required /><br/>
+ <button onclick="registerUser()">Registruj se</button>
+ <div id="message"></div>
+ </div>
 
-<script>
+ <script>
 const firebaseConfig = {
-apiKey: "OVDE-UBACI-SVOJ-API-KEY",
-authDomain: "tvoj-projekat.firebaseapp.com",
-projectId: "tvoj-projekat",
-storageBucket: "tvoj-projekat.appspot.com",
-messagingSenderId: "XXXXXX",
-appId: "1:XXXXXX:web:XXXXXX"
+apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
+authDomain: "prosecankockar-a1c15.firebaseapp.com",
+projectId: "prosecankockar-a1c15",
+storageBucket: "prosecankockar-a1c15.appspot.com",
+messagingSenderId: "968186282419",
+appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+ firebase.initializeApp(firebaseConfig);
+ const auth = firebase.auth();
+ const db = firebase.firestore();
 
-async function registerUser() {
-const email = document.getElementById("email").value;
-const password = document.getElementById("password").value;
+ async function registerUser() {
+ const email = document.getElementById("email").value;
+ const password = document.getElementById("password").value;
+ const msg = document.getElementById("message");
+ msg.innerHTML = "";
 
-try {
-const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-const user = userCredential.user;
+ if (password.length < 6) {
+ msg.innerHTML = "<div class='error'>Lozinka mora imati najmanje 6 karaktera.</div>";
+ return;
+ }
 
-// Kreiranje dokumenta u 'users'
-await db.collection("users").doc(user.uid).set({
-balance: 1000,
-email: user.email,
-createdAt: firebase.firestore.FieldValue.serverTimestamp()
-});
+ try {
+ const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+ const user = userCredential.user;
 
-alert("Registracija uspešna!");
-window.location.href = "dashboard.html";
-} catch (error) {
-alert("Greška: " + error.message);
-}
-}
-</script>
+ // Kreiranje korisnika u Firestore (ako ne postoji)
+ const userRef = db.collection("users").doc(user.uid);
+ const doc = await userRef.get();
+
+ if (!doc.exists) {
+ await userRef.set({
+ balance: 1000,
+ email: user.email,
+ createdAt: firebase.firestore.FieldValue.serverTimestamp()
+ });
+ }
+
+ msg.innerHTML = "<div class='success'>Registracija uspešna! Preusmeravanje...</div>";
+ setTimeout(() => window.location.href = "dashboard.html", 2000);
+ } catch (error) {
+ msg.innerHTML = "<div class='error'>Greška: " + error.message + "</div>";
+ }
+ }
+ </script>
 </body>
 </html>

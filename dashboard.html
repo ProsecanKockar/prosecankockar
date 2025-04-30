@@ -61,16 +61,31 @@ border-radius: 6px;
 max-width: 600px;
 text-align: center;
 }
+
+.rank-entry {
+background-color: #333;
+color: #fff;
+padding: 10px;
+margin: 5px;
+border-radius: 6px;
+max-width: 300px;
+margin: 10px auto;
+text-align: center;
+}
 </style>
 </head>
 <body>
 <h1>Dobrodošli na Prosečan Kockar</h1>
-<h2>Dostupni Mečevi</h2>
+<h2>Dobrodošao, <span id="username"></span></h2>
 
+<h2>Dostupni Mečevi</h2>
 <div id="matches"></div>
 
 <h2>Aktivne Opklade</h2>
 <div id="active-bets"></div>
+
+<h2>Rang Lista</h2>
+<div id="rank-list"></div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -90,7 +105,10 @@ appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const userId = "demoUser"; // privremeno dok ne napravimo login
+// Inicijalizacija korisničkog imena
+const userId = "demoUser"; // Privremeni demo korisnik, kasnije biće login sistem
+const userName = "Marko"; // Ovde možeš promeniti ime korisnika za test
+document.getElementById("username").textContent = userName;
 
 function loadMatches() {
 db.collection("matches").onSnapshot(snapshot => {
@@ -128,6 +146,7 @@ return;
 
 db.collection("bets").add({
 userId: userId,
+userName: userName,
 matchId: matchId,
 teams: teams,
 selected: selectedTeam,
@@ -153,6 +172,7 @@ const betDiv = document.createElement("div");
 betDiv.className = "bet-entry";
 betDiv.innerHTML = `
 <strong>${bet.teams}</strong><br/>
+Korisnik: ${bet.userName}<br/>
 Izabrano: ${bet.selected}<br/>
 Ulog: ${bet.amount}
 `;
@@ -161,9 +181,31 @@ betsDiv.appendChild(betDiv);
 });
 }
 
+function loadRankList() {
+db.collection("bets")
+.groupBy("userId") // Možeš ovo grupisati na osnovu opklada
+.onSnapshot(snapshot => {
+const rankListDiv = document.getElementById("rank-list");
+rankListDiv.innerHTML = "";
+
+snapshot.forEach(doc => {
+const userBets = doc.data();
+const rankDiv = document.createElement("div");
+rankDiv.className = "rank-entry";
+rankDiv.innerHTML = `
+<strong>${userBets.userName}</strong><br/>
+Opklade: ${userBets.opkladeCount} <br/>
+Ulog: ${userBets.totalAmount}
+`;
+rankListDiv.appendChild(rankDiv);
+});
+});
+}
+
 window.onload = function () {
 loadMatches();
 loadActiveBets();
+loadRankList();
 };
 </script>
 </body>

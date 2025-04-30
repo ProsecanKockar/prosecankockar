@@ -1,97 +1,99 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
- <meta charset="UTF-8" />
- <title>Dashboard | Prosečan Kockar</title>
- <style>
- body {
- background-color: #121212;
- color: #fff;
- font-family: 'Segoe UI', sans-serif;
- margin: 0;
- padding: 0;
- }
- header {
- background-color: #1a1a1a;
- padding: 20px;
- text-align: center;
- }
- nav a {
- color: #f44336;
- margin: 0 15px;
- text-decoration: none;
- font-weight: bold;
- }
- .container {
- padding: 20px;
- max-width: 900px;
- margin: auto;
- }
- h2 {
- border-bottom: 1px solid #444;
- padding-bottom: 5px;
- margin-top: 30px;
- }
- .tip-box {
- background-color: #1f1f1f;
- padding: 15px;
- border-radius: 10px;
- margin-bottom: 15px;
- }
- .logout-btn {
- background: #f44336;
- color: #fff;
- padding: 8px 15px;
- border: none;
- border-radius: 5px;
- cursor: pointer;
- float: right;
- margin-top: -30px;
- }
- </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prosečan Kockar - Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<style>
+body {
+background-color: #121212;
+color: #f1f1f1;
+font-family: Arial, sans-serif;
+padding: 20px;
+}
+
+h1, h2 {
+color: #00ffcc;
+}
+
+table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 20px;
+background-color: #1e1e1e;
+}
+
+th, td {
+padding: 10px;
+border: 1px solid #333;
+text-align: center;
+}
+
+th {
+background-color: #222;
+}
+
+input, select, button {
+padding: 10px;
+margin: 5px 0;
+background-color: #222;
+color: #fff;
+border: 1px solid #444;
+}
+
+button {
+cursor: pointer;
+}
+</style>
 </head>
 <body>
+<h1>Dobrodošao na Prosečan Kockar</h1>
 
-<header>
- <h1>Prosečan Kockar</h1>
- <nav>
- <a href="#">Tipovi</a>
- <a href="#">Takmičenje</a>
- <a href="#">Profil</a>
- <button class="logout-btn" onclick="logout()">Odjava</button>
- </nav>
-</header>
+<!-- Rang lista korisnika -->
+<h2>Rang Lista</h2>
+<table id="leaderboard">
+<thead>
+<tr>
+<th>#</th>
+<th>Korisnik</th>
+<th>Saldo</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
-<div class="container">
- <h2>Besplatni Tipovi</h2>
- <div class="tip-box">
- <strong>Fudbal:</strong> Arsenal - Chelsea 
- <br><strong>Tip:</strong> 1 
- <br><strong>Kvota:</strong> 2.10
- </div>
- <div class="tip-box">
- <strong>Košarka:</strong> Zvezda - Partizan 
- <br><strong>Tip:</strong> +10.5 Zvezda 
- <br><strong>Kvota:</strong> 1.85
- </div>
+<!-- Forma za klađenje -->
+<div id="betting-form">
+<h2>Postavi Opkladu</h2>
 
- <h2>Premium Tipovi</h2>
- <p>Samo za pretplaćene članove.</p>
+<label for="match">Izaberi meč:</label>
+<select id="match">
+<option value="teamA_vs_teamB">Team A vs Team B</option>
+<option value="teamC_vs_teamD">Team C vs Team D</option>
+</select>
 
- <h2>Takmičenje</h2>
- <p>Trenutni poredak (uskoro povezano sa bazom):</p>
- <div class="tip-box">
- 1. @Marko - 1200 RSD 
- <br>2. @Ivan - 1000 RSD 
- <br>3. @Petar - 750 RSD
- </div>
+<br>
+
+<label for="prediction">Tvoj tip (1, X, 2):</label>
+<input type="text" id="prediction" maxlength="1" placeholder="npr. 1">
+
+<br>
+
+<label for="stake">Ulog (npr. 100):</label>
+<input type="number" id="stake" min="1">
+
+<br>
+
+<button onclick="placeBet()">Postavi opkladu</button>
+
+<p id="betting-message" style="color: lime;"></p>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<!-- Firebase konfiguracija -->
+<script>
 const firebaseConfig = {
 apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
 authDomain: "prosecankockar-a1c15.firebaseapp.com",
@@ -101,41 +103,95 @@ messagingSenderId: "968186282419",
 appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Odjava korisnika
-window.logout = function () {
-signOut(auth).then(() => {
-window.location.href = "index.html";
-});
-};
-
-// Učitavanje tipova iz Firestore
-async function loadTips() {
-const querySnapshot = await getDocs(collection(db, "tipovi"));
-const container = document.querySelector(".container");
-
-querySnapshot.forEach((doc) => {
-const data = doc.data();
-const box = document.createElement("div");
-box.className = "tip-box";
-
-box.innerHTML = `
-<strong>${data.sport}:</strong> ${data.meč}<br>
-<strong>Tip:</strong> ${data.tip}<br>
-<strong>Kvota:</strong> ${data.kvota}
-${data.premium ? "<br><em>Premium tip</em>" : ""}
-`;
-
-if (data.premium) {
-box.style.border = "1px solid gold";
-}
-
-container.appendChild(box);
-});
-}
-
-loadTips();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 </script>
+
+<!-- Prikaz rang liste -->
+<script>
+function loadLeaderboard() {
+db.collection("users").orderBy("balance", "desc").get()
+.then(snapshot => {
+const tbody = document.querySelector("#leaderboard tbody");
+tbody.innerHTML = "";
+let rank = 1;
+snapshot.forEach(doc => {
+const user = doc.data();
+const tr = document.createElement("tr");
+tr.innerHTML = `
+<td>${rank++}</td>
+<td>${user.username || "Nepoznat"}</td>
+<td>${user.balance || 0}</td>
+`;
+tbody.appendChild(tr);
+});
+});
+}
+
+auth.onAuthStateChanged(user => {
+if (user) {
+loadLeaderboard();
+} else {
+window.location.href = "login.html"; // ili redirect po želji
+}
+});
+</script>
+
+<!-- Postavljanje opklade -->
+<script>
+async function placeBet() {
+const match = document.getElementById("match").value;
+const prediction = document.getElementById("prediction").value.trim().toUpperCase();
+const stake = parseInt(document.getElementById("stake").value);
+const message = document.getElementById("betting-message");
+
+if (!["1", "X", "2"].includes(prediction)) {
+message.textContent = "Tip mora biti 1, X ili 2.";
+return;
+}
+if (isNaN(stake) || stake <= 0) {
+message.textContent = "Ulog mora biti veći od 0.";
+return;
+}
+
+const user = firebase.auth().currentUser;
+if (!user) {
+message.textContent = "Morate biti prijavljeni.";
+return;
+}
+
+const userId = user.uid;
+const userRef = db.collection("users").doc(userId);
+
+try {
+const userDoc = await userRef.get();
+const userData = userDoc.data();
+
+if (userData.balance < stake) {
+message.textContent = "Nemate dovoljno sredstava.";
+return;
+}
+
+await userRef.update({
+balance: firebase.firestore.FieldValue.increment(-stake)
+});
+
+await db.collection("bets").add({
+userId: userId,
+match: match,
+prediction: prediction,
+stake: stake,
+createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
+
+message.textContent = "Opklada uspešno postavljena!";
+loadLeaderboard(); // osveži rang listu
+} catch (error) {
+console.error("Greška:", error);
+message.textContent = "Došlo je do greške.";
+}
+}
+</script>
+</body>
+</html>

@@ -11,41 +11,98 @@
 body {
 background-color: #121212;
 color: #f1f1f1;
-font-family: Arial, sans-serif;
+font-family: 'Segoe UI', sans-serif;
 padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
 }
 
 h1, h2 {
 color: #00ffcc;
+text-align: center;
 }
 
 table {
 width: 100%;
+max-width: 600px;
 border-collapse: collapse;
 margin-top: 20px;
 background-color: #1e1e1e;
+border-radius: 8px;
+overflow: hidden;
+box-shadow: 0 0 10px #00ffcc33;
 }
 
 th, td {
-padding: 10px;
-border: 1px solid #333;
+padding: 12px;
+border-bottom: 1px solid #333;
 text-align: center;
 }
 
 th {
 background-color: #222;
+color: #00ffcc;
 }
 
-input, select, button {
+tr:last-child td {
+border-bottom: none;
+}
+
+#betting-form {
+margin-top: 40px;
+padding: 20px;
+max-width: 400px;
+background-color: #1a1a1a;
+border-radius: 8px;
+box-shadow: 0 0 10px #00ffcc33;
+}
+
+#betting-form h2 {
+text-align: center;
+margin-bottom: 20px;
+color: #00ffcc;
+}
+
+#betting-form label {
+display: block;
+margin-top: 10px;
+}
+
+#betting-form input,
+#betting-form select {
+width: 100%;
 padding: 10px;
-margin: 5px 0;
+margin-top: 5px;
 background-color: #222;
 color: #fff;
 border: 1px solid #444;
+border-radius: 4px;
+box-sizing: border-box;
 }
 
-button {
+#betting-form button {
+width: 100%;
+margin-top: 15px;
+padding: 12px;
+background-color: #00ffcc;
+color: #000;
+border: none;
+border-radius: 4px;
+font-weight: bold;
+transition: background 0.3s;
 cursor: pointer;
+}
+
+#betting-form button:hover {
+background-color: #00ccaa;
+}
+
+#betting-message {
+margin-top: 10px;
+text-align: center;
+font-weight: bold;
+color: lime;
 }
 </style>
 </head>
@@ -75,21 +132,15 @@ cursor: pointer;
 <option value="teamC_vs_teamD">Team C vs Team D</option>
 </select>
 
-<br>
-
 <label for="prediction">Tvoj tip (1, X, 2):</label>
 <input type="text" id="prediction" maxlength="1" placeholder="npr. 1">
-
-<br>
 
 <label for="stake">Ulog (npr. 100):</label>
 <input type="number" id="stake" min="1">
 
-<br>
-
 <button onclick="placeBet()">Postavi opkladu</button>
 
-<p id="betting-message" style="color: lime;"></p>
+<p id="betting-message"></p>
 </div>
 
 <!-- Firebase konfiguracija -->
@@ -133,7 +184,7 @@ auth.onAuthStateChanged(user => {
 if (user) {
 loadLeaderboard();
 } else {
-window.location.href = "login.html"; // ili redirect po želji
+window.location.href = "login.html";
 }
 });
 </script>

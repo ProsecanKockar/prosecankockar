@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prosečan Kockar - Dashboard</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard - Prosečan Kockar</title>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -12,163 +12,87 @@ body {
 background-color: #121212;
 color: #f1f1f1;
 font-family: 'Segoe UI', sans-serif;
+margin: 0;
 padding: 20px;
-display: flex;
-flex-direction: column;
-align-items: center;
 }
 
 h1, h2 {
 color: #00ffcc;
-text-align: center;
 }
 
-table {
-width: 100%;
-max-width: 700px;
-border-collapse: collapse;
-margin-top: 20px;
-background-color: #1e1e1e;
-border-radius: 8px;
-overflow: hidden;
-box-shadow: 0 0 10px #00ffcc33;
-}
-
-th, td {
-padding: 12px;
-border-bottom: 1px solid #333;
-text-align: center;
-}
-
-th {
-background-color: #222;
-color: #00ffcc;
-}
-
-tr:last-child td {
-border-bottom: none;
-}
-
-#betting-form {
-margin-top: 40px;
-padding: 20px;
-max-width: 400px;
-background-color: #1a1a1a;
-border-radius: 8px;
-box-shadow: 0 0 10px #00ffcc33;
-}
-
-#betting-form h2 {
-text-align: center;
+.saldo {
 margin-bottom: 20px;
-color: #00ffcc;
+font-size: 18px;
 }
 
-#betting-form label {
-display: block;
-margin-top: 10px;
+.match, .bet {
+background-color: #1e1e1e;
+padding: 15px;
+margin-bottom: 10px;
+border-radius: 8px;
+box-shadow: 0 0 5px #00ffcc33;
 }
 
-#betting-form input,
-#betting-form select {
-width: 100%;
-padding: 10px;
-margin-top: 5px;
-background-color: #222;
-color: #fff;
-border: 1px solid #444;
+select, input[type="number"] {
+padding: 6px;
 border-radius: 4px;
-box-sizing: border-box;
+margin-right: 10px;
+background-color: #2c2c2c;
+color: white;
+border: none;
 }
 
-#betting-form button {
-width: 100%;
-margin-top: 15px;
-padding: 12px;
+button {
+padding: 8px 14px;
 background-color: #00ffcc;
 color: #000;
 border: none;
 border-radius: 4px;
+cursor: pointer;
 font-weight: bold;
 transition: background 0.3s;
-cursor: pointer;
 }
 
-#betting-form button:hover {
+button:hover {
 background-color: #00ccaa;
 }
 
-#betting-message {
+.bets, .past-bets, .ranking {
+margin-top: 30px;
+}
+
+.success {
+color: #00ffcc;
 margin-top: 10px;
-text-align: center;
-font-weight: bold;
-color: lime;
 }
 
-#my-bets {
-margin-top: 50px;
-}
-
-#my-bets h2 {
-margin-bottom: 10px;
+.error {
+color: red;
+margin-top: 10px;
 }
 </style>
 </head>
 <body>
 <h1>Dobrodošao na Prosečan Kockar</h1>
+<div class="saldo" id="userSaldo">Učitavanje salda...</div>
+<div id="mecevi"></div>
+<div id="message"></div>
 
-<!-- Rang lista korisnika -->
-<h2>Rang Lista</h2>
-<table id="leaderboard">
-<thead>
-<tr>
-<th>#</th>
-<th>Korisnik</th>
-<th>Saldo</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<!-- Forma za klađenje -->
-<div id="betting-form">
-<h2>Postavi Opkladu</h2>
-
-<label for="match">Izaberi meč:</label>
-<select id="match">
-<option value="teamA_vs_teamB">Team A vs Team B</option>
-<option value="teamC_vs_teamD">Team C vs Team D</option>
-</select>
-
-<label for="prediction">Tvoj tip (1, X, 2):</label>
-<input type="text" id="prediction" maxlength="1" placeholder="npr. 1">
-
-<label for="stake">Ulog (npr. 100):</label>
-<input type="number" id="stake" min="1">
-
-<button onclick="placeBet()">Postavi opkladu</button>
-
-<p id="betting-message"></p>
+<div class="bets">
+<h2>Aktivne opklade</h2>
+<div id="aktivneOpklade"></div>
 </div>
 
-<!-- Tvoje opklade -->
-<div id="my-bets">
-<h2>Tvoje Opklade</h2>
-<table>
-<thead>
-<tr>
-<th>Meč</th>
-<th>Tip</th>
-<th>Ulog</th>
-<th>Status</th>
-<th>Datum</th>
-</tr>
-</thead>
-<tbody id="bets-body"></tbody>
-</table>
+<div class="past-bets">
+<h2>Prošle opklade</h2>
+<div id="prosleOpklade"></div>
 </div>
 
-<!-- Firebase konfiguracija -->
+<div class="ranking">
+<h2>Rang lista</h2>
+<div id="rankingList"></div>
+</div>
+
 <script>
 const firebaseConfig = {
 apiKey: "AIzaSyB6HgVAePwyqCmMZFC_-xOgOF-gZLT9g20",
@@ -180,126 +104,146 @@ appId: "1:968186282419:web:8e92d1926e53150a9c0bc6"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 const auth = firebase.auth();
-</script>
+const db = firebase.firestore();
 
-<!-- Logika -->
-<script>
-function loadLeaderboard() {
-db.collection("users").orderBy("balance", "desc").get()
-.then(snapshot => {
-const tbody = document.querySelector("#leaderboard tbody");
-tbody.innerHTML = "";
-let rank = 1;
-snapshot.forEach(doc => {
-const user = doc.data();
-const tr = document.createElement("tr");
-tr.innerHTML = `
-<td>${rank++}</td>
-<td>${user.username || "Nepoznat"}</td>
-<td>${user.balance || 0}</td>
-`;
-tbody.appendChild(tr);
-});
-});
-}
+let currentUser;
 
-async function placeBet() {
-const match = document.getElementById("match").value;
-const prediction = document.getElementById("prediction").value.trim().toUpperCase();
-const stake = parseInt(document.getElementById("stake").value);
-const message = document.getElementById("betting-message");
-
-if (!["1", "X", "2"].includes(prediction)) {
-message.textContent = "Tip mora biti 1, X ili 2.";
-return;
-}
-if (isNaN(stake) || stake <= 0) {
-message.textContent = "Ulog mora biti veći od 0.";
-return;
-}
-
-const user = firebase.auth().currentUser;
+auth.onAuthStateChanged(async user => {
 if (!user) {
-message.textContent = "Morate biti prijavljeni.";
+window.location.href = "register.html";
 return;
 }
 
-const userId = user.uid;
-const userRef = db.collection("users").doc(userId);
+currentUser = user;
+await ensureUserExists(user);
+loadUserSaldo();
+loadMatches();
+loadUserBets();
+loadRanking();
+});
 
-try {
+async function ensureUserExists(user) {
+const userRef = db.collection("users").doc(user.uid);
+const doc = await userRef.get();
+if (!doc.exists) {
+await userRef.set({
+balance: 1000,
+email: user.email,
+createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
+}
+}
+
+async function loadUserSaldo() {
+const doc = await db.collection("users").doc(currentUser.uid).get();
+const data = doc.data();
+document.getElementById("userSaldo").innerText = `Tvoj saldo: ${data.balance} RSD`;
+}
+
+async function loadMatches() {
+const container = document.getElementById("mecevi");
+const snapshot = await db.collection("matches").get();
+container.innerHTML = "<h2>Dostupni mečevi</h2>";
+
+snapshot.forEach(doc => {
+const data = doc.data();
+const div = document.createElement("div");
+div.className = "match";
+
+div.innerHTML = `
+<strong>${data.teams}</strong><br/>
+<label>Predikcija:</label>
+<select id="prediction-${doc.id}">
+<option value="${data.team1}">${data.team1}</option>
+<option value="${data.team2}">${data.team2}</option>
+</select>
+<input type="number" id="stake-${doc.id}" placeholder="Ulog" min="1" />
+<button onclick="placeBet('${doc.id}', '${data.teams}')">Kladjenje</button>
+`;
+
+container.appendChild(div);
+});
+}
+
+async function placeBet(matchId, teams) {
+const prediction = document.getElementById(`prediction-${matchId}`).value;
+const stake = parseInt(document.getElementById(`stake-${matchId}`).value);
+const msg = document.getElementById("message");
+msg.innerHTML = "";
+
+if (!stake || stake <= 0) {
+msg.innerHTML = `<div class='error'>Unesite validan ulog.</div>`;
+return;
+}
+
+const userRef = db.collection("users").doc(currentUser.uid);
 const userDoc = await userRef.get();
 const userData = userDoc.data();
 
-if (userData.balance < stake) {
-message.textContent = "Nemate dovoljno sredstava.";
+if (stake > userData.balance) {
+msg.innerHTML = `<div class='error'>Nemate dovoljno sredstava.</div>`;
 return;
 }
+
+await db.collection("bets").add({
+userId: currentUser.uid,
+match: teams,
+prediction,
+stake,
+result: null,
+createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
 
 await userRef.update({
 balance: firebase.firestore.FieldValue.increment(-stake)
 });
 
-await db.collection("bets").add({
-userId: userId,
-match: match,
-prediction: prediction,
-stake: stake,
-result: null,
-createdAt: firebase.firestore.FieldValue.serverTimestamp()
-});
-
-message.textContent = "Opklada uspešno postavljena!";
-loadLeaderboard();
+msg.innerHTML = `<div class='success'>Opklada postavljena!</div>`;
+loadUserSaldo();
 loadUserBets();
-} catch (error) {
-console.error("Greška:", error);
-message.textContent = "Došlo je do greške.";
-}
 }
 
 async function loadUserBets() {
-const user = firebase.auth().currentUser;
-if (!user) return;
+const activeContainer = document.getElementById("aktivneOpklade");
+const pastContainer = document.getElementById("prosleOpklade");
+activeContainer.innerHTML = "";
+pastContainer.innerHTML = "";
 
-const betsRef = db.collection("bets")
-.where("userId", "==", user.uid)
-.orderBy("createdAt", "desc");
-
-const snapshot = await betsRef.get();
-const tbody = document.getElementById("bets-body");
-tbody.innerHTML = "";
+const snapshot = await db.collection("bets")
+.where("userId", "==", currentUser.uid)
+.orderBy("createdAt", "desc")
+.get();
 
 snapshot.forEach(doc => {
-const bet = doc.data();
-const status = bet.result === "win" ? "Dobitak" :
-bet.result === "lose" ? "Promašaj" :
-"Aktivna";
+const data = doc.data();
+const div = document.createElement("div");
+div.className = "bet";
+div.innerHTML = `<strong>${data.match}</strong><br/>Predikcija: ${data.prediction}<br/>Ulog: ${data.stake} RSD`;
 
-const tr = document.createElement("tr");
-const date = bet.createdAt?.toDate().toLocaleString("sr-RS") || "Nepoznato";
-
-tr.innerHTML = `
-<td>${bet.match}</td>
-<td>${bet.prediction}</td>
-<td>${bet.stake}</td>
-<td>${status}</td>
-<td>${date}</td>
-`;
-tbody.appendChild(tr);
-});
-}
-
-auth.onAuthStateChanged(user => {
-if (user) {
-loadLeaderboard();
-loadUserBets();
+if (data.result === null) {
+activeContainer.appendChild(div);
 } else {
-window.location.href = "login.html";
+div.innerHTML += `<br/>Rezultat: ${data.result} (${data.result === data.prediction ? "Pobeda" : "Poraz"})`;
+pastContainer.appendChild(div);
 }
 });
+}
+
+async function loadRanking() {
+const container = document.getElementById("rankingList");
+const snapshot = await db.collection("users").orderBy("balance", "desc").limit(10).get();
+
+let rank = 1;
+snapshot.forEach(doc => {
+const data = doc.data();
+const div = document.createElement("div");
+div.className = "bet";
+div.innerText = `${rank}. ${data.email || "Korisnik"} - ${data.balance} RSD`;
+container.appendChild(div);
+rank++;
+});
+}
 </script>
 </body>
 </html>
